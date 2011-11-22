@@ -123,7 +123,7 @@ class PspCzSpider(CrawlSpider):
             if voting_row.select('td[4]/a/@href'):
                 parl_memb_vote = ParlMembVote()
                 parl_memb_vote['vote'] = voting_row.select('td[3]/text()').extract()[0]
-                parl_memb_vote['parlMembName'] = voting_row.select('td[4]/a/text()').extract()[0]
+                parl_memb_vote['parl_memb_name'] = voting_row.select('td[4]/a/text()').extract()[0]
                 relative_url = voting_row.select('td[4]/a/@href').extract()[0]
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
@@ -134,7 +134,7 @@ class PspCzSpider(CrawlSpider):
             if voting_row.select('td[6]/a/@href'):
                 parl_memb_vote = ParlMembVote()
                 parl_memb_vote['vote'] = voting_row.select('td[5]/text()').extract()[0]
-                parl_memb_vote['parlMembName'] = voting_row.select('td[6]/a/text()').extract()[0]
+                parl_memb_vote['parl_memb_name'] = voting_row.select('td[6]/a/text()').extract()[0]
                 relative_url = voting_row.select('td[6]/a/@href').extract()[0]
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
@@ -145,7 +145,7 @@ class PspCzSpider(CrawlSpider):
             if voting_row.select('td[8]/a/@href'):
                 parl_memb_vote = ParlMembVote()
                 parl_memb_vote['vote'] = voting_row.select('td[7]/text()').extract()[0]
-                parl_memb_vote['parlMembName'] = voting_row.select('td[8]/a/text()').extract()[0]
+                parl_memb_vote['parl_memb_name'] = voting_row.select('td[8]/a/text()').extract()[0]
                 relative_url = voting_row.select('td[8]/a/@href').extract()[0]
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
