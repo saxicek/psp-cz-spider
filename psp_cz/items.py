@@ -21,7 +21,7 @@ class ParlMembVote(Item):
     parl_memb_name = Field()
 
     # reference to the voting
-    voting_id = Field()
+    voting = Field()
 
 
 class Voting(Item):
@@ -35,7 +35,7 @@ class Voting(Item):
     name = Field()
 
     # reference to the sitting
-    sitting_id = Field()
+    sitting = Field()
 
 
 class Sitting(Item):

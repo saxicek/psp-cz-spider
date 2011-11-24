@@ -86,7 +86,7 @@ class PspCzSpider(CrawlSpider):
             voting['url'] = urljoin_rfc(base_url, relative_url)
             voting['id'] = voting['url']
             voting['name'] = voting_link.select('td[2]/a/text()').extract()[0]
-            voting['sitting_id'] = sitting['id']
+            voting['sitting'] = sitting
             yield voting
 
             request = Request(voting['url'], self.parse_parl_memb_votes, meta={'voting':voting})
@@ -116,7 +116,7 @@ class PspCzSpider(CrawlSpider):
                 relative_url = voting_row.select('td[2]/a/@href').extract()[0]
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
-                parl_memb_vote['voting_id'] = voting['id']
+                parl_memb_vote['voting'] = voting
                 yield parl_memb_vote
 
             # 2nd vote on the row
@@ -127,7 +127,7 @@ class PspCzSpider(CrawlSpider):
                 relative_url = voting_row.select('td[4]/a/@href').extract()[0]
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
-                parl_memb_vote['voting_id'] = voting['id']
+                parl_memb_vote['voting'] = voting
                 yield parl_memb_vote
 
             # 3rd vote on the row
@@ -138,7 +138,7 @@ class PspCzSpider(CrawlSpider):
                 relative_url = voting_row.select('td[6]/a/@href').extract()[0]
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
-                parl_memb_vote['voting_id'] = voting['id']
+                parl_memb_vote['voting'] = voting
                 yield parl_memb_vote
 
             # 4th vote on the row
@@ -149,6 +149,6 @@ class PspCzSpider(CrawlSpider):
                 relative_url = voting_row.select('td[8]/a/@href').extract()[0]
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
-                parl_memb_vote['voting_id'] = voting['id']
+                parl_memb_vote['voting'] = voting
                 yield parl_memb_vote
 

@@ -1,1 +1,2 @@
 Scrapy==0.14
+SQLAlchemy==0.7.3
