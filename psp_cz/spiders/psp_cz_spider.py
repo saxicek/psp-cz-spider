@@ -1,11 +1,15 @@
 # coding=utf-8
+import re
+
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.http import Request
 from scrapy.selector import HtmlXPathSelector
 from scrapy.utils.response import get_base_url
 from scrapy.utils.url import urljoin_rfc
+from psp_cz.database import db_session
 from psp_cz.items import ParlMembVote, Voting, Sitting
+from psp_cz.models import Sitting as TSitting
 
 class PspCzSpider(CrawlSpider):
     name = "psp.cz"
@@ -13,16 +17,25 @@ class PspCzSpider(CrawlSpider):
     start_urls = [
         "http://www.psp.cz/sqw/hp.sqw?k=27"
     ]
+    latest_db_sitting_url = None
+    SITTING_URL_SORT_REGEXP = r'o=([:0-9:]+)\&s=([:0-9:]+)'
 
     rules = (
         # extract sittings
         Rule(SgmlLinkExtractor(allow=('hlasovani\.sqw$')), callback='parse_sittings', follow=False),
-        # extract votings
-        #Rule(SgmlLinkExtractor(allow=('hl\.sqw')), callback='proceed_to_votings'),
-        #Rule(SgmlLinkExtractor(allow=('phlasa\.sqw')), callback='parse_votings'),
-        # extract parliament member votes
-        #Rule(SgmlLinkExtractor(allow=('hlasy\.sqw')), callback='parse_parl_memb_votes'),
     )
+
+    def __init__(self, *a, **kw):
+        super(PspCzSpider, self).__init__(*a, **kw)
+
+        # get the latest Sitting urls from the database
+        db_sitting_urls = db_session.query(TSitting.url).all()
+        
+        if db_sitting_urls:
+            # sort the list
+            db_sitting_urls.sort(key=lambda x: map(int, re.findall(self.SITTING_URL_SORT_REGEXP, x[0])[0]))
+            self.latest_db_sitting_url = db_sitting_urls[-1][0]
+            self.log('Latest URL in DB is ' + self.latest_db_sitting_url)
 
     def parse_sittings(self, response):
         """ Parses parliament sittings at the current season """
@@ -38,10 +51,19 @@ class PspCzSpider(CrawlSpider):
             sitting['url'] = urljoin_rfc(base_url, relative_url)
             sitting['id'] = sitting['url']
             sitting['name'] = sitting_link.select('a/text()').extract()[0]
-            yield sitting
 
-            request = Request(sitting['url'], self.proceed_to_votings, meta={'sitting':sitting})
-            yield request
+            # to optimize speed start downloading only from latest sitting stored in DB
+            if self.latest_db_sitting_url and \
+                    map(int, re.findall(self.SITTING_URL_SORT_REGEXP, sitting['url'])[0]) >= \
+                    map(int, re.findall(self.SITTING_URL_SORT_REGEXP, self.latest_db_sitting_url)[0]):
+                self.log('PARSE ' + sitting['url'])
+                yield sitting
+
+                request = Request(sitting['url'], self.proceed_to_votings, meta={'sitting':sitting})
+                yield request
+
+            else:
+                self.log('SKIP ' + sitting['url'])
 
 
     # this callback just adds sitting info to requests and follows links
