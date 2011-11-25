@@ -40,7 +40,6 @@ class DBStorePipeline(object):
         init_db()
 
     def spider_closed(self, spider):
-        db_session.commit()
         db_session.close()
 
     def process_item(self, item, spider):
@@ -49,6 +48,7 @@ class DBStorePipeline(object):
                 sitting = TSitting(url = item['url'],
                                    name = item['name'])
                 db_session.add(sitting)
+                db_session.commit()
 
         elif isinstance(item, Voting):
             if self.get_db_voting(item) == None:
@@ -56,6 +56,7 @@ class DBStorePipeline(object):
                                  name = item['name'],
                                  sitting = self.get_db_sitting(item['sitting']))
                 db_session.add(voting)
+                db_session.commit()
         
         elif isinstance(item, ParlMembVote):
             if self.get_db_parl_memb_vote(item) == None:
@@ -65,11 +66,13 @@ class DBStorePipeline(object):
                     parl_memb = TParlMemb(url = item['parl_memb_url'], 
                                           name = item['parl_memb_name'])
                     db_session.add(parl_memb)
+                    db_session.commit()
 
                 parl_memb_voting = TParlMembVoting(vote = item['vote'],
                                                    parlMemb = parl_memb,
                                                    voting = self.get_db_voting(item['voting']))
                 db_session.add(parl_memb_voting)
+                db_session.commit()
 
         return item
 

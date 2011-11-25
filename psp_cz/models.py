@@ -8,7 +8,7 @@ from database import Base
 class Sitting(Base):
     __tablename__ = 'sitting'
     id = Column(Integer, primary_key=True)
-    url = Column(String(4000), unique=True)
+    url = Column(String(4000), unique=True, index=True)
     name = Column(String(255))
 
     votings = relationship('Voting', backref='sitting')
@@ -23,9 +23,9 @@ class Sitting(Base):
 class Voting(Base):
     __tablename__ = 'voting'
     id = Column(Integer, primary_key=True)
-    url = Column(String(4000), unique=True)
+    url = Column(String(4000), unique=True, index=True)
     name = Column(String(255))
-    sitting_id = Column(Integer, ForeignKey('sitting.id'))
+    sitting_id = Column(Integer, ForeignKey('sitting.id'), index=True)
 
     parlMembVotings = relationship('ParlMembVoting', backref='voting')
 
@@ -40,7 +40,7 @@ class Voting(Base):
 class ParlMemb(Base):
     __tablename__ = 'parl_memb'
     id = Column(Integer, primary_key=True)
-    url = Column(String(4000), unique=True)
+    url = Column(String(4000), unique=True, index=True)
     name = Column(String(255))
 
     parlMembVotings = relationship('ParlMembVoting', backref='parlMemb')
@@ -59,8 +59,8 @@ class ParlMembVoting(Base):
                       )
     id = Column(Integer, primary_key=True)
     vote = Column(String(1))
-    parl_memb_id = Column(Integer, ForeignKey('parl_memb.id'))
-    voting_id = Column(Integer, ForeignKey('voting.id'))
+    parl_memb_id = Column(Integer, ForeignKey('parl_memb.id'), index=True)
+    voting_id = Column(Integer, ForeignKey('voting.id'), index=True)
 
     def __init__(self, vote=None, parlMemb=None, voting=None):
         self.vote = vote

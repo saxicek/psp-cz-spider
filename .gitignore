@@ -1,0 +1,6 @@
+.env
+.project
+.pydevproject
+.scrapy
+.settings
+*.pyc
