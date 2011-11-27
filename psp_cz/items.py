@@ -31,8 +31,20 @@ class Voting(Item):
     # URL of the voting
     url = Field()
 
-    # name of the voting - sequential numbers are used
+    # sequential voting number
+    voting_nr = Field()
+
+    # name of the voting
     name = Field()
+
+    # date of the voting
+    voting_date = Field()
+
+    # link to the voting transcription
+    minutes_url = Field()
+
+    # voting result in textual form
+    result = Field()
 
     # reference to the sitting
     sitting = Field()
@@ -45,5 +57,5 @@ class Sitting(Item):
     # URL of the sitting
     url = Field()
 
-    # name of the sitting - sequential numbers along with text 'schůze' are being used
+    # name of the sitting - sequential numbers along with text 'schuze' are being used
     name = Field()

@@ -1,3 +1,5 @@
+import re
+
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals
 from scrapy.exceptions import DropItem
@@ -39,6 +41,16 @@ class DBStorePipeline(object):
     def spider_opened(self, spider):
         init_db()
 
+        if spider.latest_db_sitting_url == None:
+            # get the latest Sitting urls from the database
+            db_sitting_urls = db_session.query(TSitting.url).all()
+
+            if db_sitting_urls:
+                # sort the list
+                db_sitting_urls.sort(key=lambda x: map(int, re.findall(spider.SITTING_URL_SORT_REGEXP, x[0])[0]))
+                spider.latest_db_sitting_url = db_sitting_urls[-1][0]
+                spider.log('Latest URL in DB is ' + spider.latest_db_sitting_url)
+
     def spider_closed(self, spider):
         db_session.close()
 
@@ -53,17 +65,21 @@ class DBStorePipeline(object):
         elif isinstance(item, Voting):
             if self.get_db_voting(item) == None:
                 voting = TVoting(url = item['url'],
+                                 voting_nr = item['voting_nr'],
                                  name = item['name'],
+                                 voting_date = item['voting_date'],
+                                 minutes_url = item['minutes_url'],
+                                 result = item['result'],
                                  sitting = self.get_db_sitting(item['sitting']))
                 db_session.add(voting)
                 db_session.commit()
-        
+
         elif isinstance(item, ParlMembVote):
             if self.get_db_parl_memb_vote(item) == None:
                 # check if parliament member exists; create one if not
                 parl_memb = self.get_db_parl_memb(item)
                 if parl_memb == None:
-                    parl_memb = TParlMemb(url = item['parl_memb_url'], 
+                    parl_memb = TParlMemb(url = item['parl_memb_url'],
                                           name = item['parl_memb_name'])
                     db_session.add(parl_memb)
                     db_session.commit()
@@ -85,7 +101,7 @@ class DBStorePipeline(object):
         """Helper procedure that fetches DB Voting entity based on Voting Item"""
         if isinstance(item, Voting):
             return db_session.query(TVoting).filter_by(url=item['url']).first()
-        
+
     def get_db_parl_memb(self, item):
         """Helper procedure that fetches DB ParlMemb entity based on ParlMembVote Item"""
         if isinstance(item, ParlMembVote):

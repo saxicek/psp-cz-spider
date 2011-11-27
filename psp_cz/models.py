@@ -1,14 +1,18 @@
 # coding=utf-8
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.schema import ForeignKey, UniqueConstraint
+from sqlalchemy.schema import ForeignKey, UniqueConstraint, Index
 from database import Base
 
 class Sitting(Base):
     __tablename__ = 'sitting'
+    __table_args__ = (
+                      Index('ix_sit_url', 'url'),
+                      )
+
     id = Column(Integer, primary_key=True)
-    url = Column(String(4000), unique=True, index=True)
+    url = Column(String(4000), unique=True)
     name = Column(String(255))
 
     votings = relationship('Voting', backref='sitting')
@@ -22,16 +26,31 @@ class Sitting(Base):
 
 class Voting(Base):
     __tablename__ = 'voting'
+    __table_args__ = (
+                      Index('ix_vot_url', 'url'),
+                      Index('ix_vot_sitting_id', 'sitting_id'),
+                      Index('ix_vot_voting_date', 'voting_date')
+                      )
+
     id = Column(Integer, primary_key=True)
-    url = Column(String(4000), unique=True, index=True)
-    name = Column(String(255))
-    sitting_id = Column(Integer, ForeignKey('sitting.id'), index=True)
+    url = Column(String(4000), unique=True)
+    voting_nr = Column(Integer)
+    name = Column(String(500))
+    voting_date = Column(Date)
+    minutes_url = Column(String(4000))
+    result = Column(String(50))
+    sitting_id = Column(Integer, ForeignKey('sitting.id'))
 
     parlMembVotings = relationship('ParlMembVoting', backref='voting')
+    votingReviews = relationship('VotingReview', backref='voting')
 
-    def __init__(self, url=None, name=None, sitting=None):
+    def __init__(self, url=None, voting_nr=None, name=None, voting_date=None, minutes_url=None, result=None, sitting=None):
         self.url = url
+        self.voting_nr = voting_nr
         self.name = name
+        self.voting_date = voting_date
+        self.minutes_url = minutes_url
+        self.result = result
         self.sitting = sitting
 
     def __repr__(self):
@@ -39,8 +58,12 @@ class Voting(Base):
 
 class ParlMemb(Base):
     __tablename__ = 'parl_memb'
+    __table_args__ = (
+                      Index('ix_pm_url', 'url'),
+                      )
+
     id = Column(Integer, primary_key=True)
-    url = Column(String(4000), unique=True, index=True)
+    url = Column(String(4000), unique=True)
     name = Column(String(255))
 
     parlMembVotings = relationship('ParlMembVoting', backref='parlMemb')
@@ -56,11 +79,14 @@ class ParlMembVoting(Base):
     __tablename__ = 'parl_memb_voting'
     __table_args__ = (
                       UniqueConstraint('vote', 'parl_memb_id', 'voting_id'),
+                      Index('ix_pmv_parl_memb_id', 'parl_memb_id'),
+                      Index('ix_pmv_voting_id', 'voting_id'),
                       )
+
     id = Column(Integer, primary_key=True)
     vote = Column(String(1))
-    parl_memb_id = Column(Integer, ForeignKey('parl_memb.id'), index=True)
-    voting_id = Column(Integer, ForeignKey('voting.id'), index=True)
+    parl_memb_id = Column(Integer, ForeignKey('parl_memb.id'))
+    voting_id = Column(Integer, ForeignKey('voting.id'))
 
     def __init__(self, vote=None, parlMemb=None, voting=None):
         self.vote = vote
@@ -69,4 +95,3 @@ class ParlMembVoting(Base):
 
     def __repr__(self):
         return '<%r, %r - %r>' % (self.voting, self.parlMemb, self.vote)
- 

@@ -1,12 +1,14 @@
 # coding=utf-8
 import re
 
+from datetime import datetime
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.http import Request
 from scrapy.selector import HtmlXPathSelector
 from scrapy.utils.response import get_base_url
 from scrapy.utils.url import urljoin_rfc
+
 from psp_cz.database import db_session
 from psp_cz.items import ParlMembVote, Voting, Sitting
 from psp_cz.models import Sitting as TSitting
@@ -25,18 +27,6 @@ class PspCzSpider(CrawlSpider):
         Rule(SgmlLinkExtractor(allow=('hlasovani\.sqw$')), callback='parse_sittings', follow=False),
     )
 
-    def __init__(self, *a, **kw):
-        super(PspCzSpider, self).__init__(*a, **kw)
-
-        # get the latest Sitting urls from the database
-        db_sitting_urls = db_session.query(TSitting.url).all()
-        
-        if db_sitting_urls:
-            # sort the list
-            db_sitting_urls.sort(key=lambda x: map(int, re.findall(self.SITTING_URL_SORT_REGEXP, x[0])[0]))
-            self.latest_db_sitting_url = db_sitting_urls[-1][0]
-            self.log('Latest URL in DB is ' + self.latest_db_sitting_url)
-
     def parse_sittings(self, response):
         """ Parses parliament sittings at the current season """
 
@@ -53,7 +43,7 @@ class PspCzSpider(CrawlSpider):
             sitting['name'] = sitting_link.select('a/text()').extract()[0]
 
             # to optimize speed start downloading only from latest sitting stored in DB
-            if self.latest_db_sitting_url and \
+            if self.latest_db_sitting_url == None or \
                     map(int, re.findall(self.SITTING_URL_SORT_REGEXP, sitting['url'])[0]) >= \
                     map(int, re.findall(self.SITTING_URL_SORT_REGEXP, self.latest_db_sitting_url)[0]):
                 self.log('PARSE ' + sitting['url'])
@@ -107,7 +97,11 @@ class PspCzSpider(CrawlSpider):
             relative_url = voting_link.select('td[2]/a/@href').extract()[0]
             voting['url'] = urljoin_rfc(base_url, relative_url)
             voting['id'] = voting['url']
-            voting['name'] = voting_link.select('td[2]/a/text()').extract()[0]
+            voting['voting_nr'] = int(voting_link.select('td[2]/a/text()').extract()[0])
+            voting['name'] = voting_link.select('td[4]/node()').extract()[0]
+            voting['voting_date'] = datetime.strptime(voting_link.select('td[5]/a/text()').extract()[0], '%d.\xc2\xa0%m.\xc2\xa0%Y')
+            voting['minutes_url'] = voting_link.select('td[5]/a/@href').extract()[0]
+            voting['result'] = voting_link.select('td[6]/text()').extract()[0]
             voting['sitting'] = sitting
             yield voting
 
