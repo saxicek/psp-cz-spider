@@ -99,8 +99,12 @@ class PspCzSpider(CrawlSpider):
             voting['id'] = voting['url']
             voting['voting_nr'] = int(voting_link.select('td[2]/a/text()').extract()[0])
             voting['name'] = voting_link.select('td[4]/node()').extract()[0]
-            voting['voting_date'] = datetime.strptime(voting_link.select('td[5]/a/text()').extract()[0], '%d.\xc2\xa0%m.\xc2\xa0%Y')
-            voting['minutes_url'] = voting_link.select('td[5]/a/@href').extract()[0]
+            if voting_link.select('td[5]/a/text()'):
+                voting['voting_date'] = datetime.strptime(voting_link.select('td[5]/a/text()').extract()[0], '%d.\xc2\xa0%m.\xc2\xa0%Y')
+                voting['minutes_url'] = voting_link.select('td[5]/a/@href').extract()[0]
+            else:
+                voting['voting_date'] = datetime.strptime(voting_link.select('td[5]/text()').extract()[0], '%d.\xc2\xa0%m.\xc2\xa0%Y')
+                voting['minutes_url'] = None
             voting['result'] = voting_link.select('td[6]/text()').extract()[0]
             voting['sitting'] = sitting
             yield voting

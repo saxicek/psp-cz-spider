@@ -24,6 +24,12 @@ class Sitting(Base):
     def __repr__(self):
         return '<Zasedání %r>' % (self.name)
 
+    def values(self):
+        """Used for JSON serializing. Must be a better way to do this. :-("""
+        return dict(id      = self.id,
+                    url     = self.url,
+                    name    = self.name)
+
 class Voting(Base):
     __tablename__ = 'voting'
     __table_args__ = (
@@ -56,6 +62,17 @@ class Voting(Base):
     def __repr__(self):
         return '<Hlasování %r>' % (self.name)
 
+    def values(self):
+        """Used for JSON serializing. Must be a better way to do this. :-("""
+        return dict(id          = self.id,
+                    url         = self.url,
+                    voting_nr   = self.voting_nr,
+                    name        = self.name,
+                    voting_date = self.voting_date.isoformat(),
+                    minutes_url = self.minutes_url,
+                    result      = self.result,
+                    sitting_id  = self.sitting_id)
+
 class ParlMemb(Base):
     __tablename__ = 'parl_memb'
     __table_args__ = (
@@ -74,6 +91,12 @@ class ParlMemb(Base):
 
     def __repr__(self):
         return '<Poslanec %r>' % (self.name)
+
+    def values(self):
+        """Used for JSON serializing. Must be a better way to do this. :-("""
+        return dict(id   = self.id,
+                    url  = self.url,
+                    name = self.name)
 
 class ParlMembVoting(Base):
     __tablename__ = 'parl_memb_voting'
@@ -95,3 +118,33 @@ class ParlMembVoting(Base):
 
     def __repr__(self):
         return '<%r, %r - %r>' % (self.voting, self.parlMemb, self.vote)
+
+    def values(self):
+        """Used for JSON serializing. Must be a better way to do this. :-("""
+        return dict(id           = self.id,
+                    vote         = self.vote,
+                    parl_memb_id = self.parl_memb_id,
+                    voting_id    = self.voting_id)
+
+class VotingReview(Base):
+    __tablename__ = 'voting_review'
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String(160))
+    reasoning = Column(String)
+    voting_id = Column(Integer, ForeignKey('voting.id'))
+
+    def __init__(self, title=None, reasoning=None, voting=None):
+        self.title = title
+        self.reasoning = reasoning
+        self.voting = voting
+
+    def __repr__(self):
+        return '<Komentář k hlasování - %r>' % (self.title)
+
+    def values(self):
+        """Used for JSON serializing. Must be a better way to do this. :-("""
+        return dict(id           = self.id,
+                    title        = self.title,
+                    reasoning    = self.reasoning,
+                    voting_id    = self.voting_id)
