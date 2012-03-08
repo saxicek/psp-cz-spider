@@ -19,8 +19,10 @@ class PspCzSpider(CrawlSpider):
     start_urls = [
         "http://www.psp.cz/sqw/hp.sqw?k=27"
     ]
+    # restriction not to parse all data over and over again
     latest_db_sitting_url = None
     SITTING_URL_SORT_REGEXP = r'o=([:0-9:]+)\&s=([:0-9:]+)'
+    PARSE_ALL = False
 
     rules = (
         # extract sittings
@@ -43,7 +45,8 @@ class PspCzSpider(CrawlSpider):
             sitting['name'] = sitting_link.select('a/text()').extract()[0]
 
             # to optimize speed start downloading only from latest sitting stored in DB
-            if self.latest_db_sitting_url == None or \
+            if self.PARSE_ALL or \
+                    self.latest_db_sitting_url == None or \
                     map(int, re.findall(self.SITTING_URL_SORT_REGEXP, sitting['url'])[0]) >= \
                     map(int, re.findall(self.SITTING_URL_SORT_REGEXP, self.latest_db_sitting_url)[0]):
                 self.log('PARSE ' + sitting['url'])

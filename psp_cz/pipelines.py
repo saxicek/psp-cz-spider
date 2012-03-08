@@ -1,11 +1,16 @@
 import re
 
 from scrapy.xlib.pydispatch import dispatcher
-from scrapy import signals
+from scrapy import signals, log
 from scrapy.exceptions import DropItem
 from psp_cz.database import db_session, init_db
-from psp_cz.items import ParlMembVote, Voting, Sitting
-from psp_cz.models import Voting as TVoting, ParlMemb as TParlMemb, ParlMembVoting as TParlMembVoting, Sitting as TSitting
+from psp_cz.items import ParlMembVote, Voting, Sitting, ParlMemb
+from psp_cz.models import Voting as TVoting, \
+                          ParlMemb as TParlMemb, \
+                          ParlMembVoting as TParlMembVoting, \
+                          Sitting as TSitting, \
+                          Region as TRegion, \
+                          PolitGroup as TPolitGroup
 
 # Define your item pipelines here
 #
@@ -41,7 +46,7 @@ class DBStorePipeline(object):
     def spider_opened(self, spider):
         init_db()
 
-        if spider.latest_db_sitting_url == None:
+        if spider.name == "psp.cz" and spider.latest_db_sitting_url == None:
             # get the latest Sitting urls from the database
             db_sitting_urls = db_session.query(TSitting.url).all()
 
@@ -90,6 +95,49 @@ class DBStorePipeline(object):
                 db_session.add(parl_memb_voting)
                 db_session.commit()
 
+        elif isinstance(item, ParlMemb):
+            region = self.get_db_region(item)
+            if region == None:
+                # add region if it does not exists
+                region = TRegion(name=item['region'],
+                                 url=item['region_url'])
+                db_session.add(region)
+                db_session.commit()
+
+            polit_group = self.get_db_polit_group(item)
+            if polit_group == None:
+                # add political group if it does not exists
+                polit_group = TPolitGroup(name=item['group'],
+                                          name_full=item['group_long'],
+                                          url=item['group_url'])
+                db_session.add(polit_group)
+                db_session.commit()
+
+            parl_memb = self.get_db_parl_memb(item)
+            if parl_memb == None:
+                log.msg('Parliament member not found! %s (%s)' % (item['name'], item['url']))
+                # insert new parliament member
+                parl_memb = TParlMemb(url=item['url'],
+                                      name_full=item['name'],
+                                      born=item['born'],
+                                      picture_url=item['picture_url'],
+                                      gender=item['gender'],
+                                      region=region,
+                                      polit_group=polit_group)
+                db_session.add(parl_memb)
+            else:
+                #update existing values
+                parl_memb.url = item['url']
+                parl_memb.name_full = item['name']
+                parl_memb.born = item['born']
+                parl_memb.picture_url = item['picture_url']
+                parl_memb.gender = item['gender']
+                parl_memb.region = region
+                parl_memb.polit_group = polit_group
+
+            db_session.commit()
+
+
         return item
 
     def get_db_sitting(self, item):
@@ -103,9 +151,11 @@ class DBStorePipeline(object):
             return db_session.query(TVoting).filter_by(url=item['url']).first()
 
     def get_db_parl_memb(self, item):
-        """Helper procedure that fetches DB ParlMemb entity based on ParlMembVote Item"""
+        """Helper procedure that fetches DB ParlMemb entity based on ParlMembVote or ParlMemb Item"""
         if isinstance(item, ParlMembVote):
             return db_session.query(TParlMemb).filter_by(url=item['parl_memb_url']).first()
+        elif isinstance(item, ParlMemb):
+            return db_session.query(TParlMemb).filter(TParlMemb.url.like(item['url']+'%')).first()
 
     def get_db_parl_memb_vote(self, item):
         """Helper procedure that fetches DB ParlMembVote entity based on ParlMembVote Item"""
@@ -113,3 +163,12 @@ class DBStorePipeline(object):
             return db_session.query(TParlMembVoting).filter_by(parlMemb=self.get_db_parl_memb(item),
                                                              voting=self.get_db_voting(item['voting'])).first()
 
+    def get_db_region(self, item):
+        """Helper procedure that fetches DB Region entity based on ParlMemb Item"""
+        if isinstance(item, ParlMemb):
+            return db_session.query(TRegion).filter_by(url=item['region_url']).first()
+
+    def get_db_polit_group(self, item):
+        """Helper procedure that fetches DB PolitGroup entity based on ParlMemb Item"""
+        if isinstance(item, ParlMemb):
+            return db_session.query(TPolitGroup).filter_by(url=item['group_url']).first()

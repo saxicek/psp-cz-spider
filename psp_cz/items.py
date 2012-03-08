@@ -59,3 +59,38 @@ class Sitting(Item):
 
     # name of the sitting - sequential numbers along with text 'schuze' are being used
     name = Field()
+
+
+class ParlMemb(Item):
+    # unique identifier for duplicity check
+    id = Field()
+
+    # url of the parliament member
+    url = Field()
+
+    # parliament member region
+    region = Field()
+
+    # URL to parliament member region
+    region_url = Field()
+
+    # short name of the parliament political group
+    group = Field()
+
+    # short name of the parliament political group
+    group_long = Field()
+
+    # parliament political group URL
+    group_url = Field()
+
+    # parliament member name
+    name = Field()
+
+    # date born
+    born = Field()
+
+    # picture url
+    picture_url = Field()
+
+    # gender
+    gender = Field()
