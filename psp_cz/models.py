@@ -110,7 +110,7 @@ class ParlMemb(Base):
                     url  = self.url,
                     name = self.name,
                     name_full = self.name_full,
-                    born = self.born,
+                    born = self.born.isoformat(),
                     picture_url = self.picture_url,
                     gender = self.gender,
                     region_id = self.region_id,
@@ -154,7 +154,7 @@ class UserVoting(Base):
 
     id = Column(Integer, primary_key=True)
     vote = Column(String(1))
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('app_user.id'))
     voting_review_id = Column(Integer, ForeignKey('voting_review.id'))
     created = Column(DateTime, server_default=func.now())
 
@@ -183,7 +183,7 @@ class VotingReview(Base):
     title = Column(String(160))
     reasoning = Column(String)
     voting_id = Column(Integer, ForeignKey('voting.id'))
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('app_user.id'))
     vote_sugg = Column(String(1))
     created = Column(DateTime, server_default=func.now())
 
@@ -215,7 +215,7 @@ class AccessCodeCache(Base):
                       )
 
     access_code = Column(String(255), primary_key=True)
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('app_user.id'))
     created = Column(DateTime, server_default=func.now())
 
     def __init__(self, access_code=None, user=None):
@@ -226,7 +226,7 @@ class AccessCodeCache(Base):
         return '<AccessCodeCache %r - %r>' % (self.user_id, self.access_code)
 
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = 'app_user'
     __table_args__ = (
                       Index('ix_usr_fb_id', 'fb_id'),
                       )
