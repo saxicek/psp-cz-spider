@@ -1,5 +1,6 @@
 import re
 
+from sqlalchemy.orm.exc import NoResultFound
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals, log
 from scrapy.exceptions import DropItem
@@ -155,7 +156,14 @@ class DBStorePipeline(object):
         if isinstance(item, ParlMembVote):
             return db_session.query(TParlMemb).filter_by(url=item['parl_memb_url']).first()
         elif isinstance(item, ParlMemb):
-            return db_session.query(TParlMemb).filter(TParlMemb.url.like(item['url']+'%')).first()
+            parlMemb = None
+            try:
+                # try exact match first
+                parlMemb = db_session.query(TParlMemb).filter_by(url=item['url']).one()
+            except NoResultFound:
+                # search for urls with further parameters
+                parlMemb = db_session.query(TParlMemb).filter(TParlMemb.url.like(item['url']+'&%')).one()
+            return parlMemb
 
     def get_db_parl_memb_vote(self, item):
         """Helper procedure that fetches DB ParlMembVote entity based on ParlMembVote Item"""
