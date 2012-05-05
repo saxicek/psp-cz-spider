@@ -65,7 +65,7 @@ class ParlMemb(Base):
     name = Column(String(255))
     name_full = Column(String(255))
     born = Column(Date)
-    picture_url = Column(String(4000))
+    picture_hash = Column(String(40)) # using SHA1 hash as picture identifier
     gender = Column(String(1))
     region_id = Column(Integer, ForeignKey('region.id'))
     polit_group_id = Column(Integer, ForeignKey('polit_group.id'))
@@ -79,7 +79,7 @@ class ParlMemb(Base):
                     name = self.name,
                     name_full = self.name_full,
                     born = self.born.isoformat(),
-                    picture_url = self.picture_url,
+                    picture_hash = self.picture_hash,
                     gender = self.gender,
                     region_id = self.region_id,
                     polit_group_id = self.polit_group_id)

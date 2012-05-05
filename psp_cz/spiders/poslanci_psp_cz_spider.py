@@ -84,7 +84,7 @@ class PoslanciPspCzSpider(CrawlSpider):
         parl_memb['group_url']   = response.meta['group_url']
         parl_memb['name']        = hxs.select('/html/body/div[3]/div/h2/text()').extract()[0]
         parl_memb['born']        = born
-        parl_memb['picture_url'] = urljoin_rfc(base_url, picture_relative_url)
         parl_memb['gender']      = gender
+        parl_memb['image_urls']  = [urljoin_rfc(base_url, picture_relative_url)]
 
         yield parl_memb

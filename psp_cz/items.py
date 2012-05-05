@@ -89,8 +89,13 @@ class ParlMemb(Item):
     # date born
     born = Field()
 
-    # picture url
-    picture_url = Field()
+    # picture hash
+    picture_hash = Field()
 
     # gender
     gender = Field()
+    
+    # image urls, images - used by ImagesPipeline
+    # see http://doc.scrapy.org/en/latest/topics/images.html
+    image_urls = Field()
+    images = Field()

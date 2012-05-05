@@ -121,7 +121,7 @@ class DBStorePipeline(object):
                 parl_memb = TParlMemb(url=item['url'],
                                       name_full=item['name'],
                                       born=item['born'],
-                                      picture_url=item['picture_url'],
+                                      picture_hash=item['images'][0]['checksum'],
                                       gender=item['gender'],
                                       region=region,
                                       polit_group=polit_group)
@@ -131,7 +131,7 @@ class DBStorePipeline(object):
                 parl_memb.url = item['url']
                 parl_memb.name_full = item['name']
                 parl_memb.born = item['born']
-                parl_memb.picture_url = item['picture_url']
+                parl_memb.picture_hash = item['images'][0]['checksum']
                 parl_memb.gender = item['gender']
                 parl_memb.region = region
                 parl_memb.polit_group = polit_group
