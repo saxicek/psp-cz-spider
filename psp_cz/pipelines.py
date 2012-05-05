@@ -153,17 +153,19 @@ class DBStorePipeline(object):
 
     def get_db_parl_memb(self, item):
         """Helper procedure that fetches DB ParlMemb entity based on ParlMembVote or ParlMemb Item"""
+        url = None
+        parlMemb = None
         if isinstance(item, ParlMembVote):
-            return db_session.query(TParlMemb).filter_by(url=item['parl_memb_url']).first()
+            url = item['parl_memb_url']
         elif isinstance(item, ParlMemb):
-            parlMemb = None
-            try:
-                # try exact match first
-                parlMemb = db_session.query(TParlMemb).filter_by(url=item['url']).one()
-            except NoResultFound:
-                # search for urls with further parameters
-                parlMemb = db_session.query(TParlMemb).filter(TParlMemb.url.like(item['url']+'&%')).one()
-            return parlMemb
+            url = item['url']
+        try:
+            # try exact match first
+            parlMemb = db_session.query(TParlMemb).filter_by(url=url).one()
+        except NoResultFound:
+            # search for urls with further parameters
+            parlMemb = db_session.query(TParlMemb).filter(TParlMemb.url.like(url+'&%')).one()
+        return parlMemb
 
     def get_db_parl_memb_vote(self, item):
         """Helper procedure that fetches DB ParlMembVote entity based on ParlMembVote Item"""

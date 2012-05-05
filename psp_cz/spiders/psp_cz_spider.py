@@ -137,6 +137,8 @@ class PspCzSpider(CrawlSpider):
                 parl_memb_vote['vote'] = voting_row.select('td[1]/text()').extract()[0]
                 parl_memb_vote['parl_memb_name'] = voting_row.select('td[2]/a/text()').extract()[0]
                 relative_url = voting_row.select('td[2]/a/@href').extract()[0]
+                # remove &o=<number> parameter - it refers to tenure
+                relative_url = re.sub(r'\&o=[:0-9:]+', '', relative_url) 
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
                 parl_memb_vote['voting'] = voting
@@ -148,6 +150,8 @@ class PspCzSpider(CrawlSpider):
                 parl_memb_vote['vote'] = voting_row.select('td[3]/text()').extract()[0]
                 parl_memb_vote['parl_memb_name'] = voting_row.select('td[4]/a/text()').extract()[0]
                 relative_url = voting_row.select('td[4]/a/@href').extract()[0]
+                # remove &o=<number> parameter - it refers to tenure
+                relative_url = re.sub(r'\&o=[:0-9:]+', '', relative_url) 
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
                 parl_memb_vote['voting'] = voting
@@ -159,6 +163,8 @@ class PspCzSpider(CrawlSpider):
                 parl_memb_vote['vote'] = voting_row.select('td[5]/text()').extract()[0]
                 parl_memb_vote['parl_memb_name'] = voting_row.select('td[6]/a/text()').extract()[0]
                 relative_url = voting_row.select('td[6]/a/@href').extract()[0]
+                # remove &o=<number> parameter - it refers to tenure
+                relative_url = re.sub(r'\&o=[:0-9:]+', '', relative_url) 
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
                 parl_memb_vote['voting'] = voting
@@ -170,6 +176,8 @@ class PspCzSpider(CrawlSpider):
                 parl_memb_vote['vote'] = voting_row.select('td[7]/text()').extract()[0]
                 parl_memb_vote['parl_memb_name'] = voting_row.select('td[8]/a/text()').extract()[0]
                 relative_url = voting_row.select('td[8]/a/@href').extract()[0]
+                # remove &o=<number> parameter - it refers to tenure
+                relative_url = re.sub(r'\&o=[:0-9:]+', '', relative_url) 
                 parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
                 parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
                 parl_memb_vote['voting'] = voting
