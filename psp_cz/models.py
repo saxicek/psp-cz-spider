@@ -17,13 +17,6 @@ class Sitting(Base):
 
     votings = relationship('Voting', backref='sitting')
 
-    def __init__(self, url=None, name=None):
-        self.url = url
-        self.name = name
-
-    def __repr__(self):
-        return '<Zasedání %r>' % (self.name)
-
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
         return dict(id      = self.id,
@@ -49,18 +42,6 @@ class Voting(Base):
 
     parlMembVotings = relationship('ParlMembVoting', backref='voting')
     votingReviews = relationship('VotingReview', backref='voting')
-
-    def __init__(self, url=None, voting_nr=None, name=None, voting_date=None, minutes_url=None, result=None, sitting=None):
-        self.url = url
-        self.voting_nr = voting_nr
-        self.name = name
-        self.voting_date = voting_date
-        self.minutes_url = minutes_url
-        self.result = result
-        self.sitting = sitting
-
-    def __repr__(self):
-        return '<Hlasování %r>' % (self.name)
 
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
@@ -91,19 +72,6 @@ class ParlMemb(Base):
 
     parlMembVotings = relationship('ParlMembVoting', backref='parlMemb')
 
-    def __init__(self, url=None, name=None, name_full=None, born=None, picture_url=None, gender=None, region=None, polit_group=None):
-        self.url = url
-        self.name = name
-        self.name_full = name_full
-        self.born = born
-        self.picture_url = picture_url
-        self.gender = gender
-        self.region = region
-        self.polit_group = polit_group
-
-    def __repr__(self):
-        return '<Poslanec %r>' % (self.name)
-
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
         return dict(id   = self.id,
@@ -129,14 +97,6 @@ class ParlMembVoting(Base):
     parl_memb_id = Column(Integer, ForeignKey('parl_memb.id'))
     voting_id = Column(Integer, ForeignKey('voting.id'))
 
-    def __init__(self, vote=None, parlMemb=None, voting=None):
-        self.vote = vote
-        self.parlMemb = parlMemb
-        self.voting = voting
-
-    def __repr__(self):
-        return '<%r, %r - %r>' % (self.voting, self.parlMemb, self.vote)
-
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
         return dict(id           = self.id,
@@ -157,14 +117,6 @@ class UserVoting(Base):
     user_id = Column(Integer, ForeignKey('app_user.id'))
     voting_review_id = Column(Integer, ForeignKey('voting_review.id'))
     created = Column(DateTime, server_default=func.now())
-
-    def __init__(self, vote=None, user=None, votingReview=None):
-        self.vote = vote
-        self.user = user
-        self.votingReview = votingReview
-
-    def __repr__(self):
-        return '<%r, %r - %r>' % (self.votingReview, self.user, self.vote)
 
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
@@ -189,16 +141,6 @@ class VotingReview(Base):
 
     userVotings = relationship('UserVoting', backref='votingReview')
 
-    def __init__(self, title=None, reasoning=None, voting=None, user=None, vote_sugg=None):
-        self.title = title
-        self.reasoning = reasoning
-        self.voting = voting
-        self.user = user
-        self.vote_sugg = vote_sugg
-
-    def __repr__(self):
-        return '<Komentář k hlasování - %r>' % (self.title)
-
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
         return dict(id           = self.id,
@@ -207,23 +149,6 @@ class VotingReview(Base):
                     voting_id    = self.voting_id,
                     user_id      = self.user_id,
                     vote_sugg    = self.vote_sugg)
-
-class AccessCodeCache(Base):
-    __tablename__ = 'access_code_cache'
-    __table_args__ = (
-                      Index('ix_acc_access_code', 'access_code'),
-                      )
-
-    access_code = Column(String(255), primary_key=True)
-    user_id = Column(Integer, ForeignKey('app_user.id'))
-    created = Column(DateTime, server_default=func.now())
-
-    def __init__(self, access_code=None, user=None):
-        self.access_code = access_code
-        self.user = user
-
-    def __repr__(self):
-        return '<AccessCodeCache %r - %r>' % (self.user_id, self.access_code)
 
 class User(Base):
     __tablename__ = 'app_user'
@@ -242,18 +167,6 @@ class User(Base):
 
     votingReviews = relationship('VotingReview', backref='user')
     userVotings = relationship('UserVoting', backref='user')
-    accessCodeCaches = relationship('AccessCodeCache', backref='user')
-
-    def __init__(self, fb_id=None, name=None, first_name=None, last_name=None, url=None, gender=None):
-        self.fb_id = fb_id
-        self.name = name
-        self.first_name = first_name
-        self.last_name = last_name
-        self.url = url
-        self.gender = gender
-
-    def __repr__(self):
-        return '<Uživatel - %r>' % (self.fb_id)
 
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
@@ -263,7 +176,8 @@ class User(Base):
                     last_name     = self.last_name,
                     url           = self.url,
                     gender        = self.gender,
-                    last_modified = self.last_modified)
+                    created       = self.created.isoformat(),
+                    last_modified = self.last_modified.isoformat())
 
 class Region(Base):
     __tablename__ = 'region'
@@ -273,13 +187,6 @@ class Region(Base):
     url = Column(String(4000), unique=True)
 
     parlMembs = relationship('ParlMemb', backref='region')
-
-    def __init__(self, name=None, url=None):
-        self.name = name
-        self.url = url
-
-    def __repr__(self):
-        return '<Region - %r>' % (self.name)
 
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
@@ -295,14 +202,6 @@ class PolitGroup(Base):
     url = Column(String(4000), unique=True)
 
     parlMembs = relationship('ParlMemb', backref='polit_group')
-
-    def __init__(self, name=None, name_full=None, url=None):
-        self.name = name
-        self.name_full = name_full
-        self.url = url
-
-    def __repr__(self):
-        return '<Political Group - %r>' % (self.name)
 
     def values(self):
         """Used for JSON serializing. Must be a better way to do this. :-("""
