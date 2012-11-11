@@ -1,13 +1,16 @@
 # coding=utf-8
-from sqlalchemy import func, Column, Integer, String, Date, BigInteger, DateTime
+from sqlalchemy import func, Column, Integer, String, Date, DateTime
 from sqlalchemy.orm import relationship, object_mapper, ColumnProperty
 from sqlalchemy.schema import ForeignKey, UniqueConstraint, Index
-from database import Base
 import datetime
+
+from . import Base
 
 class BaseMixin(object):
     id = Column(Integer, primary_key=True)
-    
+    created = Column(DateTime, nullable=False, server_default=func.now())
+    last_modified = Column(DateTime, nullable=False, default=func.now())
+
     def values(self):
         """JSON serialization of model attributes.
 
@@ -24,7 +27,7 @@ class BaseMixin(object):
                 result[key] = value.isoformat()
 
         return result
-    
+
 class Sitting(BaseMixin, Base):
     __tablename__ = 'sitting'
     __table_args__ = (
@@ -53,7 +56,6 @@ class Voting(BaseMixin, Base):
     sitting_id = Column(Integer, ForeignKey('sitting.id'), nullable=False)
 
     parlMembVotings = relationship('ParlMembVoting', backref='voting')
-    votingReviews = relationship('VotingReview', backref='voting')
 
 class ParlMemb(BaseMixin, Base):
     __tablename__ = 'parl_memb'
@@ -83,51 +85,6 @@ class ParlMembVoting(BaseMixin, Base):
     vote = Column(String(1), nullable=False)
     parl_memb_id = Column(Integer, ForeignKey('parl_memb.id'), nullable=False)
     voting_id = Column(Integer, ForeignKey('voting.id'), nullable=False)
-
-class UserVoting(BaseMixin, Base):
-    __tablename__ = 'user_voting'
-    __table_args__ = (
-                      UniqueConstraint('user_id', 'voting_review_id'),
-                      Index('ix_uv_user_id', 'user_id'),
-                      Index('ix_uv_voting_review_id', 'voting_review_id'),
-                      )
-
-    vote = Column(String(1), nullable=False)
-    user_id = Column(Integer, ForeignKey('app_user.id'), nullable=False)
-    voting_review_id = Column(Integer, ForeignKey('voting_review.id'), nullable=False)
-    created = Column(DateTime, nullable=False, server_default=func.now())
-
-class VotingReview(BaseMixin, Base):
-    __tablename__ = 'voting_review'
-    __table_args__ = (
-                      UniqueConstraint('voting_id', 'user_id'),
-                      Index('ix_vr_user_id', 'user_id'),
-                      )
-    title = Column(String(160), nullable=False)
-    reasoning = Column(String)
-    voting_id = Column(Integer, ForeignKey('voting.id'), nullable=False)
-    user_id = Column(Integer, ForeignKey('app_user.id'), nullable=False)
-    vote_sugg = Column(String(1), nullable=False)
-    created = Column(DateTime, nullable=False, server_default=func.now())
-
-    userVotings = relationship('UserVoting', backref='votingReview')
-
-class User(BaseMixin, Base):
-    __tablename__ = 'app_user'
-    __table_args__ = (
-                      Index('ix_usr_fb_id', 'fb_id'),
-                      )
-    fb_id = Column(BigInteger, unique=True)
-    name = Column(String(255))
-    first_name = Column(String(55))
-    last_name = Column(String(200))
-    url = Column(String(4000))
-    gender = Column(String(10))
-    created = Column(DateTime, nullable=False, server_default=func.now())
-    last_modified = Column(DateTime, nullable=False, default=func.now)
-
-    votingReviews = relationship('VotingReview', backref='user')
-    userVotings = relationship('UserVoting', backref='user')
 
 class Region(BaseMixin, Base):
     __tablename__ = 'region'

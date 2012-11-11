@@ -3,4 +3,6 @@
 .pydevproject
 .scrapy
 .settings
+.idea
 *.pyc
+*.iml

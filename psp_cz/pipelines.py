@@ -1,17 +1,22 @@
 import re
-
+import hashlib
 from sqlalchemy.orm.exc import NoResultFound
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals, log
 from scrapy.exceptions import DropItem
-from psp_cz.database import db_session, init_db
-from psp_cz.items import ParlMembVote, Voting, Sitting, ParlMemb
-from psp_cz.models import Voting as TVoting, \
-                          ParlMemb as TParlMemb, \
-                          ParlMembVoting as TParlMembVoting, \
-                          Sitting as TSitting, \
-                          Region as TRegion, \
-                          PolitGroup as TPolitGroup
+
+from .database import init_db
+from .database import db_session
+from .items import ParlMembVote
+from .items import Voting
+from .items import Sitting
+from .items import ParlMemb
+from .psp_cz_models import Voting as TVoting
+from .psp_cz_models import ParlMemb as TParlMemb
+from .psp_cz_models import ParlMembVoting as TParlMembVoting
+from .psp_cz_models import Sitting as TSitting
+from .psp_cz_models import Region as TRegion
+from .psp_cz_models import PolitGroup as TPolitGroup
 
 # Define your item pipelines here
 #
@@ -121,7 +126,9 @@ class DBStorePipeline(object):
                 parl_memb = TParlMemb(url=item['url'],
                                       name_full=item['name'],
                                       born=item['born'],
-                                      picture_hash=item['images'][0]['checksum'],
+                                      # file is named by url hash - see
+                                      # ImagesPipeline.image_key()
+                                      picture_hash=hashlib.sha1(item['image_urls'][0]).hexdigest(),
                                       gender=item['gender'],
                                       region=region,
                                       polit_group=polit_group)
@@ -131,7 +138,9 @@ class DBStorePipeline(object):
                 parl_memb.url = item['url']
                 parl_memb.name_full = item['name']
                 parl_memb.born = item['born']
-                parl_memb.picture_hash = item['images'][0]['checksum']
+                # file is named by url hash - see
+                # ImagesPipeline.image_key()
+                parl_memb.picture_hash = hashlib.sha1(item['image_urls'][0]).hexdigest()
                 parl_memb.gender = item['gender']
                 parl_memb.region = region
                 parl_memb.polit_group = polit_group
@@ -154,7 +163,6 @@ class DBStorePipeline(object):
     def get_db_parl_memb(self, item):
         """Helper procedure that fetches DB ParlMemb entity based on ParlMembVote or ParlMemb Item"""
         url = None
-        parlMemb = None
         if isinstance(item, ParlMembVote):
             url = item['parl_memb_url']
         elif isinstance(item, ParlMemb):
@@ -164,7 +172,7 @@ class DBStorePipeline(object):
             parlMemb = db_session.query(TParlMemb).filter_by(url=url).one()
         except NoResultFound:
             # search for urls with further parameters
-            parlMemb = db_session.query(TParlMemb).filter(TParlMemb.url.like(url+'&%')).one()
+            parlMemb = db_session.query(TParlMemb).filter(TParlMemb.url.like(url+'&%')).first()
         return parlMemb
 
     def get_db_parl_memb_vote(self, item):
