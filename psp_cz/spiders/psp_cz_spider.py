@@ -14,6 +14,28 @@ from psp_cz.items import ParlMembVote, Voting, Sitting
 from psp_cz.psp_cz_models import Sitting as TSitting
 
 class PspCzSpider(CrawlSpider):
+    """
+    Spider gets information about parliament sittings, votings, parliament
+    members (not complete information - poslanci.psp.cz spider gets it) and
+    about voting of each parliament member.
+
+    Spider accepts following parameters:
+        mode - values 'incremental' or 'full'. Incremental is the default.
+            Completely parses the information from psp.cz. For incremental mode
+            there are 2 possible run options - either parameters from_term and
+            from_sitting are specified and then parsing starts at the sitting
+             specified and continues until the latest sitting. If from_term or
+             from_sitting is not specified then spider gets the latest parsed
+             sitting from the database and starts with this sitting (the latest
+             sitting from the database is crawled again to make sure that the
+             previously fetched information is complete).
+        from_term - term of parliament. Applicable only if mode=incremental and
+            from_sitting parameter is also specified
+        from_sitting - sitting number we should start at with parsing. It is
+            applicable only for incremental mode and from_term parameter
+            specified.
+
+    """
     name = "psp.cz"
     allowed_domains = ["www.psp.cz"]
     start_urls = [
@@ -33,15 +55,27 @@ class PspCzSpider(CrawlSpider):
         super(PspCzSpider, self).__init__(*a, **kw)
 
         # try to set latest_db_sitting_url only if we are not scraping all data
-        if not self.PARSE_ALL:
-            # get the latest Sitting urls from the database
-            db_sitting_urls = db_session.query(TSitting.url).all()
+        self.mode = kw.get('mode', 'incremental')
+        if self.mode == 'full':
+            pass
+        elif self.mode == 'incremental':
+            from_sitting = kw.get('from_sitting', None)
+            from_term = kw.get('from_term', None)
+            if not from_sitting or not from_term:
+                # get the latest Sitting urls from the database
+                db_sitting_urls = db_session.query(TSitting.url).all()
 
-            if db_sitting_urls:
-                # sort the list
-                db_sitting_urls.sort(key=lambda x: map(int, re.findall(self.SITTING_URL_SORT_REGEXP, x[0])[0]))
-                self.latest_db_sitting_url = db_sitting_urls[-1][0]
-                self.log('Latest URL in DB is ' + self.latest_db_sitting_url)
+                if db_sitting_urls:
+                    # sort the list
+                    db_sitting_urls.sort(key=lambda x: map(int, re.findall(self.SITTING_URL_SORT_REGEXP, x[0])[0]))
+                    latest_db_sitting_url = db_sitting_urls[-1][0]
+                    self.log('Latest URL in DB is ' + latest_db_sitting_url)
+                    self.start_from = map(int, re.findall(self.SITTING_URL_SORT_REGEXP, self.latest_db_sitting_url)[0])
+                else:
+                    # no starting point specified and no sitting record in DB - switch to 'full' mode
+                    self.mode = 'full'
+            else:
+                self.start_from = [int(from_term), int(from_sitting)]
 
     def parse_sittings(self, response):
         """ Parses parliament sittings at the current season """
@@ -59,10 +93,8 @@ class PspCzSpider(CrawlSpider):
             sitting['name'] = sitting_link.select('a/text()').extract()[0]
 
             # to optimize speed start downloading only from latest sitting stored in DB
-            if self.PARSE_ALL or \
-                    self.latest_db_sitting_url == None or \
-                    map(int, re.findall(self.SITTING_URL_SORT_REGEXP, sitting['url'])[0]) >= \
-                    map(int, re.findall(self.SITTING_URL_SORT_REGEXP, self.latest_db_sitting_url)[0]):
+            if self.mode == 'full' or \
+                    map(int, re.findall(self.SITTING_URL_SORT_REGEXP, sitting['url'])[0]) >= self.start_from:
                 self.log('PARSE ' + sitting['url'])
                 yield sitting
 
@@ -122,7 +154,7 @@ class PspCzSpider(CrawlSpider):
                 voting['minutes_url'] = voting_link.select('td[5]/a/@href').extract()[0]
             else:
                 date_text = voting_link.select('td[5]/text()').extract()[0].replace(u'\xa0', '')
-                voting['voting_date'] = datetime.strptime(date_text, u'%d.\xa0%m.\xa0%Y')
+                voting['voting_date'] = datetime.strptime(date_text, '%d.%m.%Y')
                 voting['minutes_url'] = None
             voting['result'] = voting_link.select('td[6]/text()').extract()[0]
             voting['sitting'] = sitting
