@@ -42,9 +42,7 @@ class PspCzSpider(CrawlSpider):
         "http://www.psp.cz/sqw/hp.sqw?k=27"
     ]
     # restriction not to parse all data over and over again
-    latest_db_sitting_url = None
     SITTING_URL_SORT_REGEXP = r'o=([:0-9:]+)\&s=([:0-9:]+)'
-    PARSE_ALL = False
 
     rules = (
         # extract sittings
@@ -54,11 +52,12 @@ class PspCzSpider(CrawlSpider):
     def __init__(self, *a, **kw):
         super(PspCzSpider, self).__init__(*a, **kw)
 
-        # try to set latest_db_sitting_url only if we are not scraping all data
-        self.mode = kw.get('mode', 'incremental')
-        if self.mode == 'full':
-            pass
-        elif self.mode == 'incremental':
+        if kw.get('mode', None) in ['full', 'incremental']:
+            self.mode = kw['mode']
+        else:
+            self.mode = 'incremental'
+
+        if self.mode == 'incremental':
             from_sitting = kw.get('from_sitting', None)
             from_term = kw.get('from_term', None)
             if not from_sitting or not from_term:
@@ -70,7 +69,7 @@ class PspCzSpider(CrawlSpider):
                     db_sitting_urls.sort(key=lambda x: map(int, re.findall(self.SITTING_URL_SORT_REGEXP, x[0])[0]))
                     latest_db_sitting_url = db_sitting_urls[-1][0]
                     self.log('Latest URL in DB is ' + latest_db_sitting_url)
-                    self.start_from = map(int, re.findall(self.SITTING_URL_SORT_REGEXP, self.latest_db_sitting_url)[0])
+                    self.start_from = map(int, re.findall(self.SITTING_URL_SORT_REGEXP, latest_db_sitting_url)[0])
                 else:
                     # no starting point specified and no sitting record in DB - switch to 'full' mode
                     self.mode = 'full'
