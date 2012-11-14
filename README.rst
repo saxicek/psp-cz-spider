@@ -18,9 +18,9 @@ Použití
 =======
 Před spuštěním je potřeba nastavit následující systémové proměnné:
 - DATABASE_URL - url pro připojení do databáze, například
- postgresql://user:pass@128.0.0.1:5432/database
+postgresql://user:pass@128.0.0.1:5432/database
 - IMAGES_STORE - adresář, kam se budou ukládat obrázky poslanců. Toto nastavení
- používá pavouk poslanci.psp.cz
+používá pavouk poslanci.psp.cz
 
 Samotné spuštění pavouka je příkazem::
     scrapy crawl psp.cz
@@ -32,20 +32,20 @@ Pavouk psp.cz
 Pavouk ukládá informace o hlasování v poslanecké směnovně. Pro informaci
 o použitém databázovém schématu se podívejte do souboru psp_cz_models.py. Pavouk
 podporuje následující parametry:
-    - **mode**:
-        Povolené hodnoty jsou buď *incremental* (default) nebo *full*. Full
-        mode kompletně stáhne informace o hlasování z aktuálního období.
-        Incremental provede aktualizaci posledního zasedání v databázi a
-        přidá všechna nová chybějící. K inkrementálnímu módu se vztahují
-        další 2 parametry - from_term a from_sitting.
-    - **from_term**:
-        Specifikuje období, od kterého se má začít s parsováním údajů. Zároveň
-        musí být nastavený parametetr *from_sitting*.
-        *Upozornění:* Parsování jiných období než aktuálního (6. volební období)
-        není otestované a je možné, že obsahuje chyby.
-    - **from_sitting**:
-        Specifikuje číslo zasedání sněmovny. Je nutné jej použít v kombinaci s
-        parametrem *from_term*.
+- **mode**:
+  Povolené hodnoty jsou buď *incremental* (default) nebo *full*. Full
+  mode kompletně stáhne informace o hlasování z aktuálního období.
+  Incremental provede aktualizaci posledního zasedání v databázi a
+  přidá všechna nová chybějící. K inkrementálnímu módu se vztahují
+  další 2 parametry - from_term a from_sitting.
+- **from_term**:
+  Specifikuje období, od kterého se má začít s parsováním údajů. Zároveň
+  musí být nastavený parametetr *from_sitting*.
+  *Upozornění:* Parsování jiných období než aktuálního (6. volební období)
+  není otestované a je možné, že obsahuje chyby.
+- **from_sitting**:
+  Specifikuje číslo zasedání sněmovny. Je nutné jej použít v kombinaci s
+  parametrem *from_term*.
 
 Příklad použití se všemi parametry::
     scrapy crawl psp.cz -a mode=incremental -a from_term=6 -a from_sitting=40
