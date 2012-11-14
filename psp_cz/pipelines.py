@@ -52,16 +52,6 @@ class DBStorePipeline(object):
     def spider_opened(self, spider):
         init_db()
 
-        if spider.name == "psp.cz" and spider.latest_db_sitting_url == None:
-            # get the latest Sitting urls from the database
-            db_sitting_urls = db_session.query(TSitting.url).all()
-
-            if db_sitting_urls:
-                # sort the list
-                db_sitting_urls.sort(key=lambda x: map(int, re.findall(spider.SITTING_URL_SORT_REGEXP, x[0])[0]))
-                spider.latest_db_sitting_url = db_sitting_urls[-1][0]
-                spider.log('Latest URL in DB is ' + spider.latest_db_sitting_url)
-
     def spider_closed(self, spider):
         db_session.close()
 

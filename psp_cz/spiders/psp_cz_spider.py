@@ -39,7 +39,8 @@ class PspCzSpider(CrawlSpider):
     name = "psp.cz"
     allowed_domains = ["www.psp.cz"]
     start_urls = [
-        "http://www.psp.cz/sqw/hp.sqw?k=27"
+        "http://www.psp.cz/sqw/hp.sqw?k=27",
+        "http://www.psp.cz/sqw/hlasovani.sqw?zvo=1"
     ]
     # restriction not to parse all data over and over again
     SITTING_URL_SORT_REGEXP = r'o=([:0-9:]+)\&s=([:0-9:]+)'
