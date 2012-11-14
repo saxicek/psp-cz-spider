@@ -32,6 +32,7 @@ Pavouk psp.cz
 Pavouk ukládá informace o hlasování v poslanecké směnovně. Pro informaci
 o použitém databázovém schématu se podívejte do souboru psp_cz_models.py. Pavouk
 podporuje následující parametry:
+
 - **mode**:
   Povolené hodnoty jsou buď *incremental* (default) nebo *full*. Full
   mode kompletně stáhne informace o hlasování z aktuálního období.
