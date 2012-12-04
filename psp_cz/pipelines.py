@@ -81,7 +81,8 @@ class DBStorePipeline(object):
                 parl_memb = self.get_db_parl_memb(item)
                 if parl_memb == None:
                     parl_memb = TParlMemb(url = item['parl_memb_url'],
-                                          name = item['parl_memb_name'])
+                                          name = item['parl_memb_name'],
+                                          psp_cz_id = item['parl_memb_id'])
                     db_session.add(parl_memb)
                     db_session.commit()
 
@@ -120,6 +121,7 @@ class DBStorePipeline(object):
                                       # ImagesPipeline.image_key()
                                       picture_hash=hashlib.sha1(item['image_urls'][0]).hexdigest(),
                                       gender=item['gender'],
+                                      psp_cz_id=item['parl_memb_id'],
                                       region=region,
                                       polit_group=polit_group)
                 db_session.add(parl_memb)
@@ -132,6 +134,7 @@ class DBStorePipeline(object):
                 # ImagesPipeline.image_key()
                 parl_memb.picture_hash = hashlib.sha1(item['image_urls'][0]).hexdigest()
                 parl_memb.gender = item['gender']
+                parl_memb.psp_cz_id = item['parl_memb_id']
                 parl_memb.region = region
                 parl_memb.polit_group = polit_group
 
@@ -152,18 +155,7 @@ class DBStorePipeline(object):
 
     def get_db_parl_memb(self, item):
         """Helper procedure that fetches DB ParlMemb entity based on ParlMembVote or ParlMemb Item"""
-        url = None
-        if isinstance(item, ParlMembVote):
-            url = item['parl_memb_url']
-        elif isinstance(item, ParlMemb):
-            url = item['url']
-        try:
-            # try exact match first
-            parlMemb = db_session.query(TParlMemb).filter_by(url=url).one()
-        except NoResultFound:
-            # search for urls with further parameters
-            parlMemb = db_session.query(TParlMemb).filter(TParlMemb.url.like(url+'&%')).first()
-        return parlMemb
+        return db_session.query(TParlMemb).filter_by(psp_cz_id=item['parl_memb_id']).first()
 
     def get_db_parl_memb_vote(self, item):
         """Helper procedure that fetches DB ParlMembVote entity based on ParlMembVote Item"""

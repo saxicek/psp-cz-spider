@@ -10,6 +10,7 @@ from scrapy.utils.response import get_base_url
 from scrapy.utils.url import urljoin_rfc
 
 from psp_cz.items import ParlMemb
+from .psp_cz_spider import get_parl_memb_id
 
 class PoslanciPspCzSpider(CrawlSpider):
     """ Spider crawls the psp.cz and gets information about parliament members """
@@ -87,5 +88,6 @@ class PoslanciPspCzSpider(CrawlSpider):
         parl_memb['born']        = born
         parl_memb['gender']      = gender
         parl_memb['image_urls']  = [urljoin_rfc(base_url, picture_relative_url)]
+        parl_memb['parl_memb_id'] = get_parl_memb_id(parl_memb['url'])
 
         yield parl_memb

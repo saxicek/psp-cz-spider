@@ -23,6 +23,9 @@ class ParlMembVote(Item):
     # reference to the voting
     voting = Field()
 
+    # parliament member id in psp.cz
+    parl_memb_id = Field()
+
 
 class Voting(Item):
     # unique identifier for duplicity check
@@ -94,6 +97,9 @@ class ParlMemb(Item):
 
     # gender
     gender = Field()
+
+    # parliament member id in psp.cz
+    parl_memb_id = Field()
     
     # image urls, images - used by ImagesPipeline
     # see http://doc.scrapy.org/en/latest/topics/images.html

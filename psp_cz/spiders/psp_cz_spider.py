@@ -13,6 +13,12 @@ from psp_cz.database import db_session
 from psp_cz.items import ParlMembVote, Voting, Sitting
 from psp_cz.psp_cz_models import Sitting as TSitting
 
+def get_parl_memb_id(url):
+    match = re.search('id=([0-9]+)', url)
+    if match:
+        return int(match.group(1))
+
+
 class PspCzSpider(CrawlSpider):
     """
     Spider gets information about parliament sittings, votings, parliament
@@ -187,4 +193,5 @@ class PspCzSpider(CrawlSpider):
             parl_memb_vote['parl_memb_url'] = urljoin_rfc(base_url, relative_url)
             parl_memb_vote['id'] = response.url + '|' + parl_memb_vote['parl_memb_url']
             parl_memb_vote['voting'] = voting
+            parl_memb_vote['parl_memb_id'] = get_parl_memb_id(parl_memb_vote['parl_memb_url'])
             yield parl_memb_vote

@@ -60,6 +60,7 @@ class Voting(BaseMixin, Base):
 class ParlMemb(BaseMixin, Base):
     __tablename__ = 'parl_memb'
     __table_args__ = (
+                      UniqueConstraint('psp_cz_id'),
                       Index('ix_pm_url', 'url'),
                       )
 
@@ -71,6 +72,7 @@ class ParlMemb(BaseMixin, Base):
     gender = Column(String(1))
     region_id = Column(Integer, ForeignKey('region.id'))
     polit_group_id = Column(Integer, ForeignKey('polit_group.id'))
+    psp_cz_id = Column(Integer, nullable=False)
 
     parlMembVotings = relationship('ParlMembVoting', backref='parlMemb')
 
